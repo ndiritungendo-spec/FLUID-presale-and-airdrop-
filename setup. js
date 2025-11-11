@@ -1,0 +1,181 @@
+/**
+ * Node.js script to create FluidChain repo structure
+ * Run: node setup-fluidchain.js
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Base directory
+const baseDir = path.join(process.cwd(), 'fluidchain');
+
+// Folder structure
+const folders = [
+  'app',
+  'components',
+  'styles'
+];
+
+// Files with boilerplate content
+const files = {
+  'package.json': `{
+  "name": "fluidchain",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@rainbow-me/rainbowkit": "^1.2.0",
+    "@react-three/drei": "^9.60.3",
+    "@react-three/fiber": "^8.12.1",
+    "ethers": "^6.9.0",
+    "framer-motion": "^10.12.16",
+    "next": "13.6.4",
+    "next-themes": "^0.2.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "wagmi": "^1.5.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.26",
+    "tailwindcss": "^3.4.3"
+  }
+}`,
+  'tailwind.config.js': `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        fluidBlue: "#00FFFF",
+        electricViolet: "#7B61FF",
+        darkBg: "#0a0a1f"
+      }
+    }
+  },
+  plugins: [],
+};`,
+  'next.config.js': `/** @type {import('next').NextConfig} */
+const nextConfig = { reactStrictMode: true };
+module.exports = nextConfig;`,
+  '.gitignore': `node_modules/
+.next/
+out/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+.vscode/
+.idea/
+.DS_Store`,
+  '.env.example': `NEXT_PUBLIC_RPC_URL=https://polygon-rpc.com
+PRIVATE_KEY=your_private_key_here
+NEXT_PUBLIC_FLD_TOKEN_ADDRESS=0x02Cbc05c44B7A98D1996bD1084BAe72a9Fb7B21B
+NEXT_PUBLIC_PRESALE_CONTRACT_ADDRESS=0x02Cbc05c44B7A98D1996bD1084BAe72a9Fb7B21B
+NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS=0x02Cbc05c44B7A98D1996bD1084BAe72a9Fb7B21B`,
+  'README.md': `# FluidChain
+
+Experience the Future of Fluidity & Borderless Finance — Powered by FLD.
+
+## Features
+- Live 3D Globe with FLD transfers
+- Multi-currency Presale (MATIC & ERC20)
+- Airdrop Claim
+- Wallet Connect (RainbowKit + Wagmi)
+- Dark/Light/System Mode
+- Tokenomics & Roadmap
+- Legal Pages: Terms & Privacy
+
+## Setup
+1. npm install
+2. cp .env.example .env.local
+3. npm run dev
+
+## Deployment
+Vercel recommended for deployment.`,
+  'styles/globals.css': `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-darkBg text-white;
+}`
+};
+
+// Files in app/
+const appFiles = {
+  'layout.jsx': `import './globals.css';
+import { ThemeProvider } from "next-themes";
+import Navbar from "../components/Navbar";
+import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import '@rainbow-me/rainbowkit/styles.css';
+import { configureChains, createClient, WagmiConfig } from 'wagmi';
+import { polygon } from 'wagmi/chains';
+import { publicProvider } from 'wagmi/providers/public';
+
+const { chains, provider } = configureChains([polygon], [publicProvider()]);
+const { connectors } = getDefaultWallets({ appName: 'FluidChain', chains });
+const wagmiClient = createClient({ autoConnect: true, connectors, provider });
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <WagmiConfig client={wagmiClient}>
+            <RainbowKitProvider chains={chains}>
+              <Navbar />
+              {children}
+            </RainbowKitProvider>
+          </WagmiConfig>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}`,
+  'page.jsx': `export default function Home() { return <div className="min-h-screen p-8">FluidChain Home Page</div>; }`,
+  'terms.jsx': `export default function Terms() { return <div className="min-h-screen p-8">Terms of Service Page</div>; }`,
+  'privacy.jsx': `export default function Privacy() { return <div className="min-h-screen p-8">Privacy Policy Page</div>; }`
+};
+
+// Components placeholder
+const componentFiles = {
+  'Navbar.jsx': `export default function Navbar(){ return <nav className="p-4">Navbar</nav>; }`,
+  'ThemeToggle.jsx': `export default function ThemeToggle(){ return <select><option>Light</option><option>Dark</option></select>; }`,
+  'Globe.jsx': `export default function Globe(){ return <div>3D Globe</div>; }`,
+  'PresalePolygon.jsx': `export default function PresalePolygon(){ return <div>Presale + Airdrop</div>; }`
+};
+
+// Create folders
+folders.forEach(folder => {
+  const dir = path.join(baseDir, folder);
+  fs.mkdirSync(dir, { recursive: true });
+});
+
+// Create root files
+Object.entries(files).forEach(([filename, content]) => {
+  const filePath = path.join(baseDir, filename);
+  fs.writeFileSync(filePath, content);
+});
+
+// Create app files
+Object.entries(appFiles).forEach(([filename, content]) => {
+  const filePath = path.join(baseDir, 'app', filename);
+  fs.writeFileSync(filePath, content);
+});
+
+// Create components files
+Object.entries(componentFiles).forEach(([filename, content]) => {
+  const filePath = path.join(baseDir, 'components', filename);
+  fs.writeFileSync(filePath, content);
+});
+
+console.log('✅ FluidChain repo structure created at', baseDir);
